@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Love Letter</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --ink: #171428;
+      --violet: #5d3f85;
+      --paper: #fff8fb;
+      --pink: #ff6b91;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      color: #fff;
+      background:
+        radial-gradient(circle at 50% 42%, rgba(105, 69, 146, .24), transparent 25%),
+        linear-gradient(145deg, #1a1634 0%, #17162f 55%, #101327 100%);
+    }
+
+    .scene {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      isolation: isolate;
+    }
+
+    .scene::before,
+    .scene::after {
+      content: "";
+      position: absolute;
+      z-index: -2;
+      width: 430px;
+      height: 430px;
+      border: 1px solid rgba(196, 145, 255, .05);
+      border-radius: 50%;
+    }
+
+    .scene::before { left: -220px; top: 12%; }
+    .scene::after { right: -260px; bottom: -80px; }
+
+    .blob {
+      position: fixed;
+      z-index: -1;
+      width: 360px;
+      height: 170px;
+      background: #8d78b4;
+      opacity: .88;
+      filter: blur(.2px);
+    }
+
+    .blob.top {
+      top: -105px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 0 0 55% 55%;
+    }
+
+    .blob.bottom {
+      bottom: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 55% 55% 0 0;
+      width: 520px;
+      height: 190px;
+      background: #b6a0c9;
+      opacity: .72;
+    }
+
+    .content {
+      position: relative;
+      z-index: 2;
+      width: min(520px, 92vw);
+      text-align: center;
+      padding-top: 10px;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-bottom: 14px;
+      padding: 8px 18px;
+      border-radius: 999px;
+      background: #b99bd0;
+      color: #29213c;
+      font-family: Arial, sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      box-shadow: 0 7px 20px rgba(11, 8, 24, .16);
+    }
+
+    h1 {
+      margin: 0 0 26px;
+      font-family: Arial, sans-serif;
+      font-size: clamp(30px, 6vw, 46px);
+      line-height: 1;
+      letter-spacing: -1.5px;
+      text-shadow: 0 4px 18px rgba(8, 7, 21, .25);
+    }
+
+    .heart-title {
+      color: #ff7895;
+      display: inline-block;
+      margin: 0 5px;
+      animation: pulse 1.8s ease-in-out infinite;
+    }
+
+    .hearts {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 145px;
+      height: 150px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .floating-heart {
+      --size: 15px;
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      background: #f04f78;
+      transform: rotate(45deg);
+      opacity: .9;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .floating-heart::before,
+    .floating-heart::after {
+      content: "";
+      position: absolute;
+      width: var(--size);
+      height: var(--size);
+      border-radius: 50%;
+      background: inherit;
+    }
+
+    .floating-heart::before { left: calc(var(--size) / -2); }
+    .floating-heart::after { top: calc(var(--size) / -2); }
+
+    .floating-heart:nth-child(1) { --size: 11px; left: 29%; top: 30px; animation-delay: -.2s; }
+    .floating-heart:nth-child(2) { --size: 14px; left: 39%; top: 68px; animation-delay: -.9s; }
+    .floating-heart:nth-child(3) { --size: 9px; left: 56%; top: 45px; animation-delay: -1.5s; }
+    .floating-heart:nth-child(4) { --size: 16px; left: 63%; top: 82px; animation-delay: -.6s; }
+    .floating-heart:nth-child(5) { --size: 12px; left: 47%; top: 102px; animation-delay: -1.1s; }
+    .floating-heart:nth-child(6) { --size: 8px; left: 70%; top: 28px; animation-delay: -2s; }
+
+    .envelope-wrap {
+      position: relative;
+      width: min(370px, 76vw);
+      height: 250px;
+      margin: 6px auto 0;
+      cursor: pointer;
+      filter: drop-shadow(0 24px 24px rgba(7, 6, 20, .28));
+      perspective: 1000px;
+    }
+
+    .envelope {
+      position: absolute;
+      z-index: 3;
+      left: 50%;
+      bottom: 0;
+      width: 330px;
+      height: 190px;
+      max-width: 92%;
+      transform: translateX(-50%);
+    }
+
+    .back {
+      position: absolute;
+      inset: 0;
+      border-radius: 4px 4px 8px 8px;
+      background: #dba5cb;
+      border: 2px solid rgba(74, 49, 94, .25);
+    }
+
+    .flap {
+      position: absolute;
+      z-index: 5;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 115px;
+      background: #9d70ba;
+      clip-path: polygon(0 0, 100% 0, 50% 100%);
+      transform-origin: 50% 0;
+      transition: transform .75s cubic-bezier(.2,.8,.2,1);
+      border-radius: 4px 4px 0 0;
+    }
+
+    .front-left,
+    .front-right,
+    .front-bottom {
+      position: absolute;
+      z-index: 4;
+    }
+
+    .front-left {
+      left: 0;
+      bottom: 0;
+      width: 58%;
+      height: 100%;
+      background: #ecd3e6;
+      clip-path: polygon(0 0, 100% 100%, 0 100%);
+    }
+
+    .front-right {
+      right: 0;
+      bottom: 0;
+      width: 58%;
+      height: 100%;
+      background: #e0b8d5;
+      clip-path: polygon(100% 0, 100% 100%, 0 100%);
+    }
+
+    .front-bottom {
+      left: 0;
+      bottom: 0;
+      width: 100%;
+      height: 76%;
+      background: #f1dfec;
+      clip-path: polygon(0 100%, 50% 0, 100% 100%);
+      border-radius: 0 0 8px 8px;
+    }
+
+    .seal {
+      position: absolute;
+      z-index: 7;
+      left: 50%;
+      bottom: 48px;
+      width: 56px;
+      height: 56px;
+      transform: translateX(-50%) rotate(45deg);
+      background: #8f62b0;
+      border: 3px solid #bfa1cf;
+      border-radius: 50% 50% 48% 50%;
+      box-shadow: 0 5px 12px rgba(47, 27, 68, .22);
+      transition: opacity .35s, transform .35s;
+    }
+
+    .seal::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 11px;
+      width: 28px;
+      height: 28px;
+      border: 2px solid #dbc4e5;
+      border-radius: 50%;
+    }
+
+    .envelope-wrap.open .flap {
+      transform: rotateX(180deg);
+      z-index: 1;
+    }
+
+    .envelope-wrap.open .seal {
+      opacity: 0;
+      transform: translateX(-50%) rotate(45deg) scale(.4);
+    }
+
+    .letter-screen[hidden] { display: none; }
+
+    .letter-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      background: rgba(18, 14, 35, .84);
+      backdrop-filter: blur(9px);
+      opacity: 0;
+      transition: opacity .35s ease;
+    }
+
+    .letter-screen.visible { opacity: 1; }
+
+    .choice-card,
+    .letter-paper {
+      position: relative;
+      width: min(660px, 100%);
+      max-height: calc(100vh - 40px);
+      overflow-y: auto;
+      padding: clamp(28px, 6vw, 56px);
+      border: 1px solid #e8cfe4;
+      border-radius: 8px;
+      background:
+        linear-gradient(rgba(255,255,255,.82), rgba(255,255,255,.82)),
+        repeating-linear-gradient(0deg, transparent 0, transparent 31px, #eadde9 32px);
+      color: #493553;
+      box-shadow: 0 24px 80px rgba(5, 3, 18, .4);
+      transform: translateY(18px);
+      transition: transform .4s ease;
+    }
+
+    .letter-screen.visible .choice-card,
+    .letter-screen.visible .letter-paper { transform: translateY(0); }
+
+    .choice-card {
+      width: min(460px, 100%);
+      padding: 42px 32px;
+      text-align: center;
+    }
+
+    .choice-card h2 {
+      margin: 0 0 12px;
+      color: #704787;
+      font-size: clamp(26px, 5vw, 34px);
+    }
+
+    .response-card h2 {
+      margin-bottom: 26px;
+      font-size: clamp(34px, 8vw, 54px);
+    }
+
+    .choice-card p {
+      margin: 0 0 28px;
+      color: #755c7d;
+      font-size: 17px;
+      line-height: 1.6;
+    }
+
+    .choice-actions {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .choice-actions button {
+      min-width: 130px;
+      padding: 12px 20px;
+      border: 0;
+      border-radius: 999px;
+      font: 700 15px Arial, sans-serif;
+      cursor: pointer;
+      transition: transform .2s, background .2s;
+    }
+
+    .choice-actions button:hover { transform: translateY(-2px); }
+
+    .yes-button {
+      background: #875da4;
+      color: #fff;
+    }
+
+    .yes-button:hover { background: #704787; }
+
+    .no-button {
+      background: #eee5f0;
+      color: #644c6c;
+    }
+
+    .no-button:hover { background: #e2d3e8; }
+
+    .letter-paper h2 {
+      margin: 0 42px 8px 0;
+      color: #704787;
+      font-size: clamp(27px, 5vw, 38px);
+    }
+
+    .letter-paper .letter-date {
+      margin: 0 0 28px;
+      color: #a4759f;
+      font-family: Arial, sans-serif;
+      font-size: 13px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    .letter-paper p {
+      margin: 0 0 18px;
+      font-size: clamp(16px, 2.4vw, 18px);
+      line-height: 1.8;
+    }
+
+    .letter-paper .letter-sign {
+      margin: 28px 0 0;
+      color: #9c5d83;
+      font-size: 20px;
+      font-style: italic;
+      text-align: right;
+    }
+
+    .close-letter {
+      position: sticky;
+      float: right;
+      top: 0;
+      margin: -14px -14px 0 12px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      border-radius: 50%;
+      background: #ead9ef;
+      color: #563b6b;
+      font: 24px/1 Arial, sans-serif;
+      cursor: pointer;
+    }
+
+    .close-letter:hover { background: #d8c0e4; }
+
+    .choice-actions button:focus-visible,
+    .close-letter:focus-visible,
+    .envelope-wrap:focus-visible {
+      outline: 3px solid #ffd1e1;
+      outline-offset: 5px;
+    }
+
+    .hint {
+      margin: 20px 0 0;
+      font-family: Arial, sans-serif;
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+      letter-spacing: .5px;
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #ffd3e2;
+      box-shadow: 0 0 12px 3px rgba(255, 188, 215, .4);
+      animation: twinkle 2.4s ease-in-out infinite;
+    }
+
+    .sparkle.a { left: 12%; top: 36%; }
+    .sparkle.b { right: 15%; top: 28%; animation-delay: -1s; }
+    .sparkle.c { left: 18%; bottom: 23%; animation-delay: -1.7s; }
+    .sparkle.d { right: 10%; bottom: 34%; animation-delay: -.5s; }
+
+    @keyframes pulse {
+      50% { transform: scale(1.15); }
+    }
+
+    @keyframes float {
+      50% { transform: translateY(-12px) rotate(45deg); }
+    }
+
+    @keyframes twinkle {
+      50% { opacity: .18; transform: scale(.5); }
+    }
+
+    @media (max-height: 650px) {
+      .content { transform: scale(.88); }
+    }
+
+    @media (max-width: 480px) {
+      .content { width: 100%; }
+      .envelope-wrap { width: 330px; height: 235px; }
+      .hearts { top: 142px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <div class="blob top"></div>
+    <div class="blob bottom"></div>
+    <i class="sparkle a"></i>
+    <i class="sparkle b"></i>
+    <i class="sparkle c"></i>
+    <i class="sparkle d"></i>
+
+    <section class="content">
+      <div class="badge">For You</div>
+      <h1><span class="heart-title">&hearts;</span> Love Letter <span class="heart-title">&hearts;</span></h1>
+
+      <div class="hearts" aria-hidden="true">
+        <i class="floating-heart"></i>
+        <i class="floating-heart"></i>
+        <i class="floating-heart"></i>
+        <i class="floating-heart"></i>
+        <i class="floating-heart"></i>
+        <i class="floating-heart"></i>
+      </div>
+
+      <div class="envelope-wrap" id="envelope" role="button" tabindex="0" aria-label="Open love letter" aria-expanded="false" aria-controls="letter-screen">
+        <div class="envelope">
+          <div class="back"></div>
+          <div class="flap"></div>
+          <div class="front-left"></div>
+          <div class="front-right"></div>
+          <div class="front-bottom"></div>
+          <div class="seal"></div>
+        </div>
+      </div>
+
+      <p class="hint">Click the envelope to open</p>
+    </section>
+
+    <section class="letter-screen" id="letter-screen" role="dialog" aria-modal="true" aria-labelledby="choice-title" hidden>
+      <div class="choice-card" id="choice-card">
+        <h2 id="choice-title">Bab, will you open my letter?</h2>
+        <p>I wrote a little something just for you. Would you like to read it?</p>
+        <div class="choice-actions">
+          <button class="yes-button" id="yes-open" type="button">Yes, open it</button>
+          <button class="no-button" id="no-open" type="button">No</button>
+        </div>
+      </div>
+
+      <div class="choice-card response-card" id="no-response" hidden>
+        <h2 id="response-title">para asa pud??</h2>
+        <div class="choice-actions">
+          <button class="no-button" id="back-to-choice" type="button">Back to choices</button>
+        </div>
+      </div>
+
+      <article class="letter-paper" id="letter-paper" hidden>
+        <button class="close-letter" id="close-letter" type="button" aria-label="Close letter">&times;</button>
+        <h2 id="letter-title">To my dearest Bab,</h2>
+        <p class="letter-date">A little note, written with love</p>
+
+        <p>Hello, my Bab,</p>
+
+        <p>I wanted to take a moment to remind you just how special you are to me. You have a way of making even the simplest days feel brighter, and your presence brings so much warmth and happiness into my life. Thinking of you is enough to put a smile on my face.</p>
+
+        <p>I admire your kind heart, your lovely spirit, and the way you make people around you feel cared for. You are thoughtful, genuine, and wonderfully one of a kind. Your smile is beautiful, your laugh is a joy to hear, and the little things that make you <em>you</em> are the things I treasure most.</p>
+
+        <p>Thank you for being someone I can appreciate, cherish, and feel lucky to know. I hope you never forget how much you matter and how deserving you are of tenderness, laughter, and all the good things life can bring. You make my world a sweeter place simply by being in it.</p>
+
+        <p>So here's a little greeting just for you: may today bring you reasons to smile, may your heart feel light, and may you always know that someone is cheering for you and sending you the biggest hug.</p>
+
+        <p>Keep being your wonderful self, Bab. You are loved, appreciated, and endlessly precious to me.</p>
+
+        <p class="letter-sign">With all my love, &hearts;</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const envelope = document.getElementById("envelope");
+    const letterScreen = document.getElementById("letter-screen");
+    const choiceCard = document.getElementById("choice-card");
+    const noResponse = document.getElementById("no-response");
+    const letterPaper = document.getElementById("letter-paper");
+    const yesOpen = document.getElementById("yes-open");
+    const noOpen = document.getElementById("no-open");
+    const backToChoice = document.getElementById("back-to-choice");
+    const closeLetter = document.getElementById("close-letter");
+    let openTimer;
+    let closeTimer;
+
+    const openLetter = () => {
+      if (envelope.getAttribute("aria-expanded") === "true") return;
+      window.clearTimeout(closeTimer);
+      envelope.setAttribute("aria-expanded", "true");
+      envelope.classList.add("open");
+      window.clearTimeout(openTimer);
+      openTimer = window.setTimeout(() => {
+        letterScreen.hidden = false;
+        window.requestAnimationFrame(() => {
+          letterScreen.classList.add("visible");
+          yesOpen.focus();
+        });
+      }, 650);
+    };
+
+    const confirmOpen = () => {
+      choiceCard.hidden = true;
+      noResponse.hidden = true;
+      letterPaper.hidden = false;
+      letterScreen.setAttribute("aria-labelledby", "letter-title");
+      closeLetter.focus();
+    };
+
+    const showNoResponse = () => {
+      choiceCard.hidden = true;
+      noResponse.hidden = false;
+      letterScreen.setAttribute("aria-labelledby", "response-title");
+      backToChoice.focus();
+    };
+
+    const returnToChoice = () => {
+      noResponse.hidden = true;
+      choiceCard.hidden = false;
+      letterScreen.setAttribute("aria-labelledby", "choice-title");
+      yesOpen.focus();
+    };
+
+    const closeLetterView = () => {
+      window.clearTimeout(openTimer);
+      letterScreen.classList.remove("visible");
+      envelope.classList.remove("open");
+      envelope.setAttribute("aria-expanded", "false");
+      choiceCard.hidden = false;
+      noResponse.hidden = true;
+      letterPaper.hidden = true;
+      letterScreen.setAttribute("aria-labelledby", "choice-title");
+      window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(() => { letterScreen.hidden = true; }, 350);
+      envelope.focus();
+    };
+
+    envelope.addEventListener("click", openLetter);
+    envelope.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        openLetter();
+      }
+    });
+    yesOpen.addEventListener("click", confirmOpen);
+    noOpen.addEventListener("click", showNoResponse);
+    backToChoice.addEventListener("click", returnToChoice);
+    closeLetter.addEventListener("click", closeLetterView);
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !letterScreen.hidden) closeLetterView();
+    });
+  </script>
+</body>
+</html>
